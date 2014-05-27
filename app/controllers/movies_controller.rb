@@ -9,13 +9,34 @@ class MoviesController < ApplicationController
   def index
     @title
     @release_date
-    if params[:sort] 
-      @movies = Movie.order(params[:sort])
-      @title = 'hilite' if params[:sort] == 'title'
-      @release_date = 'hilite' if params[:sort] == 'release_date'
+    sort = params[:sort] || 'id'
+    @picked_ratings = []
+    #if params[:ratings]
+    #  @picked_ratings = params[:ratings].keys
+    #else
+    #  @picked_ratings = ratings
+    #end
+    if params[:ratings]
+      @picked_ratings = params[:ratings].keys
+      @movies = Movie.where(rating: @picked_ratings).order(sort)
     else
-      @movies = Movie.all
+      @movies = Movie.order(sort)
     end
+    @picked_hash = params[:ratings]
+    #if params[:ratings]
+    #  @movies = Movie.where :rating => params[:ratings].keys
+    #else
+    #  @movies = Movie.all
+    #end
+    #if params[:sort] 
+    #  @movies = @movies.order(params[:sort])
+    @title = 'hilite' if params[:sort] == 'title'
+    @release_date = 'hilite' if params[:sort] == 'release_date'
+    #else
+      #@movies = Movie.all
+      #@movies = Movie.where :rating => params[:ratings].keys
+    #end
+    @all_ratings = ratings
   end
 
   def new
@@ -44,6 +65,16 @@ class MoviesController < ApplicationController
     @movie.destroy
     flash[:notice] = "Movie '#{@movie.title}' deleted."
     redirect_to movies_path
+  end
+
+  def ratings
+    #array = []
+    #var = Movie.all
+    #var.each { |movie|
+    #  array.push(movie.rating) if !array.include?(movie.rating)
+    #}
+    #array
+    Movie.uniq.pluck(:rating)
   end
 
 end
