@@ -5,20 +5,40 @@ class MoviesController < ApplicationController
     @movie = Movie.find(id) # look up movie by unique ID
     
   end
-
+# If the user explicitly includes new sorting/filtering settings in params[],
+# the session should not override them.
+# On the contrary, the new settings should be remembered in the session.
   def index
     @title
     @release_date
-    sort = params[:sort] || 'id'
-    @picked_ratings = []
+    unless params[:ratings] or params[:sort]
+      redirect_to movies_path(@index, ratings: session[:picked_ratings], sort: session[:sort])
+    end
+    if params[:sort]
+      sort = params[:sort]
+      session[:sort] = sort
+    else
+      if session[:sort]
+        sort = session[:sort]
+        params[:sort] = sort
+      else
+        sort = 'id'
+      end
+    end
+    session[:picked_ratings] = params[:ratings] if params[:ratings]
     if params[:ratings]
       @picked_ratings = params[:ratings].keys
     else
-      @picked_ratings = ratings
+      if session[:picked_ratings]
+        @picked_ratings = session[:picked_ratings].keys
+        params[:ratings] = session[:picked_ratings]
+      else
+        @picked_ratings = ratings
+      end
     end
     @movies = Movie.where(rating: @picked_ratings).order(sort)
-    @title = 'hilite' if params[:sort] == 'title'
-    @release_date = 'hilite' if params[:sort] == 'release_date'
+    @title = 'hilite' if session[:sort] == 'title'
+    @release_date = 'hilite' if session[:sort] == 'release_date'
     @all_ratings = ratings
   end
 
