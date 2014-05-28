@@ -3,7 +3,7 @@ class MoviesController < ApplicationController
   def show
     id = params[:id] # retrieve movie ID from URI route
     @movie = Movie.find(id) # look up movie by unique ID
-    # will render app/views/movies/show.<extension> by default
+    
   end
 
   def index
@@ -11,31 +11,14 @@ class MoviesController < ApplicationController
     @release_date
     sort = params[:sort] || 'id'
     @picked_ratings = []
-    #if params[:ratings]
-    #  @picked_ratings = params[:ratings].keys
-    #else
-    #  @picked_ratings = ratings
-    #end
     if params[:ratings]
       @picked_ratings = params[:ratings].keys
-      @movies = Movie.where(rating: @picked_ratings).order(sort)
     else
-      @movies = Movie.order(sort)
+      @picked_ratings = ratings
     end
-    @picked_hash = params[:ratings]
-    #if params[:ratings]
-    #  @movies = Movie.where :rating => params[:ratings].keys
-    #else
-    #  @movies = Movie.all
-    #end
-    #if params[:sort] 
-    #  @movies = @movies.order(params[:sort])
+    @movies = Movie.where(rating: @picked_ratings).order(sort)
     @title = 'hilite' if params[:sort] == 'title'
     @release_date = 'hilite' if params[:sort] == 'release_date'
-    #else
-      #@movies = Movie.all
-      #@movies = Movie.where :rating => params[:ratings].keys
-    #end
     @all_ratings = ratings
   end
 
@@ -68,12 +51,6 @@ class MoviesController < ApplicationController
   end
 
   def ratings
-    #array = []
-    #var = Movie.all
-    #var.each { |movie|
-    #  array.push(movie.rating) if !array.include?(movie.rating)
-    #}
-    #array
     Movie.uniq.pluck(:rating)
   end
 
