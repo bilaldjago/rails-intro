@@ -9,11 +9,9 @@ class MoviesController < ApplicationController
 # the session should not override them.
 # On the contrary, the new settings should be remembered in the session.
   def index
+    redirection unless params[:ratings] or params[:sort]
     @title
     @release_date
-    unless params[:ratings] or params[:sort]
-      redirect_to movies_path(@index, ratings: session[:picked_ratings], sort: session[:sort])
-    end
     if params[:sort]
       sort = params[:sort]
       session[:sort] = sort
@@ -40,6 +38,7 @@ class MoviesController < ApplicationController
     @title = 'hilite' if session[:sort] == 'title'
     @release_date = 'hilite' if session[:sort] == 'release_date'
     @all_ratings = ratings
+    
   end
 
   def new
@@ -69,9 +68,26 @@ class MoviesController < ApplicationController
     flash[:notice] = "Movie '#{@movie.title}' deleted."
     redirect_to movies_path
   end
-
+  private
   def ratings
     Movie.uniq.pluck(:rating)
+  end
+
+  def redirection
+    if session[:picked_ratings]
+      if session[:sort]
+        redirect_to movies_path(@index, ratings: session[:picked_ratings], sort: session[:sort])
+      else
+        redirect_to movies_path(@index, ratings: session[:picked_ratings])
+      end
+    else
+      if session[:sort]
+        redirect_to movies_path(@index, sort: session[:sort])
+      else
+        redirect_to movies_path
+      end
+    end
+    flash.keep
   end
 
 end
