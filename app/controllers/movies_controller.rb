@@ -5,13 +5,11 @@ class MoviesController < ApplicationController
     @movie = Movie.find(id) # look up movie by unique ID
     
   end
-# If the user explicitly includes new sorting/filtering settings in params[],
-# the session should not override them.
-# On the contrary, the new settings should be remembered in the session.
+
   def index
-    redirection unless params[:ratings] or params[:sort]
-    @title
-    @release_date
+    if params[:ratings] == nil and params[:sort] == nil
+      redirection
+    end
     if params[:sort]
       sort = params[:sort]
       session[:sort] = sort
@@ -23,8 +21,9 @@ class MoviesController < ApplicationController
         sort = 'id'
       end
     end
-    session[:picked_ratings] = params[:ratings] if params[:ratings]
+    
     if params[:ratings]
+      session[:picked_ratings] = params[:ratings]
       @picked_ratings = params[:ratings].keys
     else
       if session[:picked_ratings]
@@ -74,18 +73,26 @@ class MoviesController < ApplicationController
   end
 
   def redirection
-    if session[:picked_ratings]
-      if session[:sort]
-        redirect_to movies_path(@index, ratings: session[:picked_ratings], sort: session[:sort])
-      else
-        redirect_to movies_path(@index, ratings: session[:picked_ratings])
-      end
+    #if session[:picked_ratings]
+    #  if session[:sort]
+    #    redirect_to movies_path(@index, ratings: session[:picked_ratings], sort: session[:sort])
+    #  else
+    #    redirect_to movies_path(@index, ratings: session[:picked_ratings])
+    #  end
+    #else
+    #  if session[:sort]
+    #    redirect_to movies_path(@index, sort: session[:sort])
+    #  else
+    #    redirect_to movies_path
+    #  end
+    #end
+
+    if session[:picked_ratings] == nil and session[:sort] == nil
+      session[:picked_ratings] = ratings.each_slice(1).each_with_object Hash.new do |(k, v), h| h[k] = 1 end
+      session[:sort] = 'id'
+      redirect_to movies_path(@index, ratings: session[:picked_ratings], sort: session[:sort])
     else
-      if session[:sort]
-        redirect_to movies_path(@index, sort: session[:sort])
-      else
-        redirect_to movies_path
-      end
+      redirect_to movies_path(@index, ratings: session[:picked_ratings], sort: session[:sort])
     end
     flash.keep
   end
